@@ -12,7 +12,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: etrichi
 
   db:
-    image: postgres:14
+    image: hounaida202/postgres:14
     ports:
       - "5432:5432"
     environment:
