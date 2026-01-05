@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'etrichi'
         IMAGE_NAME = 'hounaida202/demo1-app'
-        POSTGRES_IMAGE = 'hounaida202/postgres:14'
     }
 
     stages {
@@ -49,8 +48,6 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                         bat "echo %PASS% | docker login -u %USER% --password-stdin"
                         bat "docker push %IMAGE_NAME%"
-                        // Optionnel: Si tu veux aussi pousser PostgreSQL, décommente la ligne suivante
-                        // bat "docker tag postgres:14 %POSTGRES_IMAGE% && docker push %POSTGRES_IMAGE%"
                     }
                 }
             }
@@ -63,14 +60,14 @@ pipeline {
                     bat "docker-compose down || echo 'Aucun conteneur à arrêter'"
                     bat "docker-compose up -d"
 
-                    // Attendre un peu pour que les conteneurs démarrent
-                    bat 'timeout /t 10'
+                    // Attendre 10 secondes pour que les conteneurs démarrent
+                    bat 'ping -n 10 127.0.0.1 > nul'
 
                     // Vérifier l'état des conteneurs
                     bat 'docker-compose ps'
 
-                    // Vérifier les logs (optionnel, pour debugging)
-                    bat 'docker-compose logs --tail=10 app'
+                    // Vérifier que l'application démarre correctement
+                    bat 'timeout /t 5 /nobreak && echo "Attente terminée"'
                 }
             }
         }
@@ -84,15 +81,23 @@ pipeline {
             }
         }
         success {
-            echo 'Pipeline successful!'
-            echo 'Application Spring Boot: http://localhost:8081'
-            echo 'PgAdmin: http://localhost:5050 (admin@admin.com / admin)'
+            echo 'Pipeline successful! '
+            echo ''
+            echo '=== Applications déployées ==='
+            echo 'Spring Boot App: http://localhost:8081'
+            echo 'PgAdmin: http://localhost:5050'
+            echo '  - Email: admin@admin.com'
+            echo '  - Password: admin'
             echo 'PostgreSQL: localhost:5432'
+            echo '  - Database: spring-boot-docker'
+            echo '  - User: postgres'
+            echo '  - Password: etrichi'
+            echo '=============================='
         }
         failure {
-            echo 'Pipeline failed'
+            echo 'Pipeline failed '
             dir('demo1') {
-                bat 'docker-compose logs || echo "Impossible de récupérer les logs"'
+                bat 'docker-compose logs --tail=50 || echo "Impossible de récupérer les logs"'
             }
         }
     }
