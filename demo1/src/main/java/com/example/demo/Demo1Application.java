@@ -30,6 +30,10 @@ public class Demo1Application {
     public String hey5() {
         return "CI/CD OK  version 5";
     }
+    @GetMapping("/success")
+    public String success() {
+        return "succefully";
+    }
 
 
     public static void main(String[] args) {
