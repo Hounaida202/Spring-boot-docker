@@ -19,23 +19,28 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Build Maven'
-                // Windows utilise mvnw.cmd
-                bat 'mvn clean package -DskipTests'
+                dir('demo1') {
+                    echo 'Build Maven'
+                    bat 'mvn clean package -DskipTests'
+                }
             }
         }
 
         stage('Run Unit Tests') {
             steps {
-                echo 'Run unit tests'
-                bat 'mvn test'
+                dir('demo1') {
+                    echo 'Run unit tests'
+                    bat 'mvn test'
+                }
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                echo 'Build Docker App'
-                bat "docker build -t %IMAGE_NAME% ."
+                dir('demo1') {
+                    echo 'Build Docker App'
+                    bat "docker build -t %IMAGE_NAME% ."
+                }
             }
         }
 
