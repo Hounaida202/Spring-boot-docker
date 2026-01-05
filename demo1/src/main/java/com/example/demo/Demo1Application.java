@@ -26,14 +26,9 @@ public class Demo1Application {
     public String home() {
         return "🎉 Spring Boot fonctionne dans Docker !";
     }
-    @GetMapping("/test-ci")
-    public String testCI() {
+    @GetMapping("/hey")
+    public String hey() {
         return "CI/CD OK 🚀 version 2";
-    }
-
-    @GetMapping("/test-ci")
-    public String travaille() {
-        return "CI/CD OK 🚀 version 3";
     }
 
 
