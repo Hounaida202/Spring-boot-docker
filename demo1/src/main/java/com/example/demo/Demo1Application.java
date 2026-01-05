@@ -28,7 +28,7 @@ public class Demo1Application {
     }
     @GetMapping("/hey")
     public String hey() {
-        return "CI/CD OK 🚀 version 2";
+        return "CI/CD OK 🚀 version 4";
     }
 
 
