@@ -8,8 +8,10 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout Code') {
             steps {
+                // Cloner le repo GitHub
                 git branch: 'main',
                     url: 'https://github.com/Hounaida202/Spring-boot-docker.git'
             }
@@ -18,21 +20,22 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Build Maven'
-                sh './mvnw clean package -DskipTests'
+                // Windows utilise mvnw.cmd
+                bat 'mvnw.cmd clean package -DskipTests'
             }
         }
 
         stage('Run Unit Tests') {
             steps {
                 echo 'Run unit tests'
-                sh './mvnw test'
+                bat 'mvnw.cmd test'
             }
         }
 
         stage('Build Docker Images') {
             steps {
                 echo 'Build Docker App'
-                sh "docker build -t ${IMAGE_NAME}:latest ."
+                bat "docker build -t %IMAGE_NAME% ."
             }
         }
 
@@ -40,9 +43,9 @@ pipeline {
             steps {
                 echo 'Push Docker App to Docker Hub'
                 withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                    sh "echo $PASS | docker login -u $USER --password-stdin"
-                    sh "docker push ${IMAGE_NAME}:latest"
-                    sh "docker push ${POSTGRES_IMAGE}"
+                    bat "echo %PASS% | docker login -u %USER% --password-stdin"
+                    bat "docker push %IMAGE_NAME%"
+                    bat "docker push %POSTGRES_IMAGE%"
                 }
             }
         }
@@ -50,8 +53,8 @@ pipeline {
         stage('Deploy / Run Containers') {
             steps {
                 echo 'Deploy with Docker Compose'
-                sh "docker-compose down"
-                sh "docker-compose up -d"
+                bat "docker-compose down"
+                bat "docker-compose up -d"
             }
         }
     }
