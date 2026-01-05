@@ -21,14 +21,14 @@ pipeline {
             steps {
                 echo 'Build Maven'
                 // Windows utilise mvnw.cmd
-                bat 'mvnw.cmd clean package -DskipTests'
+                bat 'mvn clean package -DskipTests'
             }
         }
 
         stage('Run Unit Tests') {
             steps {
                 echo 'Run unit tests'
-                bat 'mvnw.cmd test'
+                bat 'mvn test'
             }
         }
 
