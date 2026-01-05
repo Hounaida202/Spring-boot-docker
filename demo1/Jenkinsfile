@@ -27,21 +27,21 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                echo '✅ Exécution des tests unitaires'
+                echo 'Exécution des tests unitaires'
                 sh './mvnw test'
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                echo '🐳 Build Docker App'
+                echo 'Build Docker App'
                 sh "docker build -t ${IMAGE_NAME}:latest ."
             }
         }
 
         stage('Push Docker Images') {
             steps {
-                echo '📤 Push Docker App sur Docker Hub'
+                echo 'Push Docker App sur Docker Hub'
                 withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                     sh "echo $PASS | docker login -u $USER --password-stdin"
                     sh "docker push ${IMAGE_NAME}:latest"
@@ -52,7 +52,7 @@ pipeline {
 
         stage('Deploy / Run Containers') {
             steps {
-                echo '🚀 Déploiement avec Docker Compose'
+                echo 'Déploiement avec Docker Compose'
                 sh "docker-compose down" // stop containers si existants
                 sh "docker-compose up -d" // démarre containers
             }
@@ -61,13 +61,13 @@ pipeline {
 
     post {
         always {
-            echo '🔔 Pipeline terminé'
+            echo 'Pipeline terminé'
         }
         success {
-            echo '🎉 Pipeline exécuté avec succès !'
+            echo 'Pipeline exécuté avec succès !'
         }
         failure {
-            echo '❌ Pipeline échoué !'
+            echo 'Pipeline échoué !'
         }
     }
 }
