@@ -2,72 +2,41 @@ pipeline {
     agent any
 
     environment {
-        // Docker Hub credentials ID configuré dans Jenkins (voir plus bas)
         DOCKERHUB_CREDENTIALS = 'etrichi'
         IMAGE_NAME = 'hounaida202/demo1-app'
-        POSTGRES_IMAGE = 'hounaida202/postgres:14'
     }
 
     stages {
 
-        stage('Checkout Code') {
-            steps {
-                // Cloner le repo GitHub
-                git branch: 'main',
-                    url: 'https://github.com/Hounaida202/Spring-boot-docker.git'
-            }
-        }
-
         stage('Build') {
             steps {
-                echo '🛠️ Build Maven'
-                sh './mvnw clean package -DskipTests' // Génère le jar
+                sh './mvnw clean package -DskipTests'
             }
         }
 
-        stage('Run Unit Tests') {
+        stage('Test') {
             steps {
-                echo '✅ Exécution des tests unitaires'
                 sh './mvnw test'
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Docker Build') {
             steps {
-                echo '🐳 Build Docker App'
                 sh "docker build -t ${IMAGE_NAME}:latest ."
             }
         }
 
-        stage('Push Docker Images') {
+        stage('Docker Push') {
             steps {
-                echo '📤 Push Docker App sur Docker Hub'
-                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                    sh "echo $PASS | docker login -u $USER --password-stdin"
+                withCredentials([usernamePassword(
+                    credentialsId: DOCKERHUB_CREDENTIALS,
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
+                    sh 'echo $PASS | docker login -u $USER --password-stdin'
                     sh "docker push ${IMAGE_NAME}:latest"
-                    sh "docker push ${POSTGRES_IMAGE}"
                 }
             }
-        }
-
-        stage('Deploy / Run Containers') {
-            steps {
-                echo '🚀 Déploiement avec Docker Compose'
-                sh "docker-compose down" // stop containers si existants
-                sh "docker-compose up -d" // démarre containers
-            }
-        }
-    }
-
-    post {
-        always {
-            echo '🔔 Pipeline terminé'
-        }
-        success {
-            echo '🎉 Pipeline exécuté avec succès !'
-        }
-        failure {
-            echo '❌ Pipeline échoué !'
         }
     }
 }
