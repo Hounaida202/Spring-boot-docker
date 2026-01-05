@@ -38,6 +38,11 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 dir('demo1') {
+                    echo 'Login to Docker Hub'
+                    withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        bat "docker login -u %USER% -p %PASS%"
+                    }
+
                     echo 'Build Docker App'
                     bat "docker build -t %IMAGE_NAME% ."
                 }
