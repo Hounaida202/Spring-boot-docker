@@ -8,10 +8,8 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout Code') {
             steps {
-                // Cloner le repo GitHub
                 git branch: 'main',
                     url: 'https://github.com/Hounaida202/Spring-boot-docker.git'
             }
@@ -38,11 +36,6 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 dir('demo1') {
-                    echo 'Login to Docker Hub'
-                    withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                        bat "docker login -u %USER% -p %PASS%"
-                    }
-
                     echo 'Build Docker App'
                     bat "docker build -t %IMAGE_NAME% ."
                 }
@@ -51,20 +44,34 @@ pipeline {
 
         stage('Push Docker Images') {
             steps {
-                echo 'Push Docker App to Docker Hub'
-                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                    bat "echo %PASS% | docker login -u %USER% --password-stdin"
-                    bat "docker push %IMAGE_NAME%"
-                    bat "docker push %POSTGRES_IMAGE%"
+                dir('demo1') {
+                    echo 'Push Docker App to Docker Hub'
+                    withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        bat "echo %PASS% | docker login -u %USER% --password-stdin"
+                        bat "docker push %IMAGE_NAME%"
+                        // Optionnel: Si tu veux aussi pousser PostgreSQL, décommente la ligne suivante
+                        // bat "docker tag postgres:14 %POSTGRES_IMAGE% && docker push %POSTGRES_IMAGE%"
+                    }
                 }
             }
         }
 
         stage('Deploy / Run Containers') {
             steps {
-                echo 'Deploy with Docker Compose'
-                bat "docker-compose down"
-                bat "docker-compose up -d"
+                dir('demo1') {
+                    echo 'Deploy with Docker Compose'
+                    bat "docker-compose down || echo 'Aucun conteneur à arrêter'"
+                    bat "docker-compose up -d"
+
+                    // Attendre un peu pour que les conteneurs démarrent
+                    bat 'timeout /t 10'
+
+                    // Vérifier l'état des conteneurs
+                    bat 'docker-compose ps'
+
+                    // Vérifier les logs (optionnel, pour debugging)
+                    bat 'docker-compose logs --tail=10 app'
+                }
             }
         }
     }
@@ -72,12 +79,21 @@ pipeline {
     post {
         always {
             echo 'Pipeline finished'
+            dir('demo1') {
+                bat 'docker-compose ps || echo "Docker compose non disponible"'
+            }
         }
         success {
-            echo 'Pipeline successful'
+            echo 'Pipeline successful!'
+            echo 'Application Spring Boot: http://localhost:8081'
+            echo 'PgAdmin: http://localhost:5050 (admin@admin.com / admin)'
+            echo 'PostgreSQL: localhost:5432'
         }
         failure {
             echo 'Pipeline failed'
+            dir('demo1') {
+                bat 'docker-compose logs || echo "Impossible de récupérer les logs"'
+            }
         }
     }
 }
