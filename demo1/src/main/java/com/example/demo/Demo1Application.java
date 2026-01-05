@@ -31,6 +31,11 @@ public class Demo1Application {
         return "CI/CD OK 🚀 version 2";
     }
 
+    @GetMapping("/test-ci")
+    public String travaille() {
+        return "CI/CD OK 🚀 version 3";
+    }
+
 
     public static void main(String[] args) {
         SpringApplication.run(Demo1Application.class, args);
